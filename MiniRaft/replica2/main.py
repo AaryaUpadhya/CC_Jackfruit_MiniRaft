@@ -13,9 +13,7 @@ from pydantic import BaseModel
 
 # ─── Configuration ───────────────────────────────────────────────
 REPLICA_ID = int(os.getenv("REPLICA_ID", "1"))
-PEER_ADDRESSES = os.getenv(
-    "PEER_ADDRESSES", "http://replica2:8000,http://replica3:8000"
-).split(",")
+PEER_ADDRESSES = [p for p in os.getenv("PEER_ADDRESSES", "").split(",") if p.strip()]
 GATEWAY_URL = os.getenv("GATEWAY_URL", "http://gateway:8000")
 
 ELECTION_TIMEOUT_MIN = int(os.getenv("ELECTION_TIMEOUT_MIN", "500"))   # ms
@@ -107,8 +105,9 @@ def become_follower(term: int, new_leader: Optional[int] = None):
     global state, current_term, voted_for, leader_id, heartbeat_task
     was_leader = state == State.LEADER
     state = State.FOLLOWER
+    if term > current_term:
+        voted_for = None
     current_term = term
-    voted_for = None
     leader_id = new_leader
     reset_election_timer()
     if heartbeat_task and not heartbeat_task.done():
@@ -190,7 +189,7 @@ async def start_election():
     if state == State.CANDIDATE and votes_received >= QUORUM:
         become_leader()
     elif state == State.CANDIDATE:
-        become_follower(current_term)
+        become_follower(current_term, leader_id)
 
 
 # ─── Heartbeat / Log Replication ─────────────────────────────────
