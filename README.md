@@ -31,7 +31,7 @@ Even if the "Active Leader" server crashes, the remaining servers will automatic
 
 ---
 
-## Connecting from Other Systems (Friends)
+## Connecting from Other Systems
 Step 1 — Find your IP address
 Open Command Prompt and run:
 ipconfig
